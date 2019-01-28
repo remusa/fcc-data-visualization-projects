@@ -49,12 +49,12 @@ function drawGraph(data) {
     const xMin = d3.min(YEARS)
     const xMax = d3.max(YEARS)
     const xScale = d3
-        .scaleLinear()
+        .scaleTime()
         .domain([xMin, xMax])
         .range([0, w])
-    const xAxis = d3.axisBottom(xScale)
-    const xAxisGroup = svg
-        .append('g')
+    const xAxis = d3.axisBottom(xScale).tickFormat(d3.format('d'))
+
+    svg.append('g')
         .call(xAxis)
         .attr('id', 'x-axis')
         .attr('transform', 'translate(60, 400)')
@@ -66,8 +66,8 @@ function drawGraph(data) {
         .domain([0, yMax])
         .range([h, 0])
     const yAxis = d3.axisLeft(yScale)
-    const yAxisGroup = svg
-        .append('g')
+
+    svg.append('g')
         .call(yAxis)
         .attr('id', 'y-axis')
         .attr('transform', 'translate(60, 0)')
