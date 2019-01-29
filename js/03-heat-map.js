@@ -7,7 +7,7 @@ const dataset = fetch(
 const tooltip = d3
     .select('.chart-container')
     .append('div')
-    .style('border', `1px solid var(--color-primary-dark)`)
+    .style('border', `1px solid const(--color-primary-dark)`)
     .style('border-radius', '4px')
     .style('padding', '2px')
     .style('position', 'absolute')
@@ -15,70 +15,326 @@ const tooltip = d3
     .style('visibility', 'hidden')
     .attr('id', 'tooltip')
 
-function drawGraph(data) {
-    const w = 800
-    const h = 400
+const colorbrewer = {
+    RdYlBu: {
+        3: ['#fc8d59', '#ffffbf', '#91bfdb'],
+        4: ['#d7191c', '#fdae61', '#abd9e9', '#2c7bb6'],
+        5: ['#d7191c', '#fdae61', '#ffffbf', '#abd9e9', '#2c7bb6'],
+        6: ['#d73027', '#fc8d59', '#fee090', '#e0f3f8', '#91bfdb', '#4575b4'],
+        7: [
+            '#d73027',
+            '#fc8d59',
+            '#fee090',
+            '#ffffbf',
+            '#e0f3f8',
+            '#91bfdb',
+            '#4575b4',
+        ],
+        8: [
+            '#d73027',
+            '#f46d43',
+            '#fdae61',
+            '#fee090',
+            '#e0f3f8',
+            '#abd9e9',
+            '#74add1',
+            '#4575b4',
+        ],
+        9: [
+            '#d73027',
+            '#f46d43',
+            '#fdae61',
+            '#fee090',
+            '#ffffbf',
+            '#e0f3f8',
+            '#abd9e9',
+            '#74add1',
+            '#4575b4',
+        ],
+        10: [
+            '#a50026',
+            '#d73027',
+            '#f46d43',
+            '#fdae61',
+            '#fee090',
+            '#e0f3f8',
+            '#abd9e9',
+            '#74add1',
+            '#4575b4',
+            '#313695',
+        ],
+        11: [
+            '#a50026',
+            '#d73027',
+            '#f46d43',
+            '#fdae61',
+            '#fee090',
+            '#ffffbf',
+            '#e0f3f8',
+            '#abd9e9',
+            '#74add1',
+            '#4575b4',
+            '#313695',
+        ],
+    },
+    RdBu: {
+        3: ['#ef8a62', '#f7f7f7', '#67a9cf'],
+        4: ['#ca0020', '#f4a582', '#92c5de', '#0571b0'],
+        5: ['#ca0020', '#f4a582', '#f7f7f7', '#92c5de', '#0571b0'],
+        6: ['#b2182b', '#ef8a62', '#fddbc7', '#d1e5f0', '#67a9cf', '#2166ac'],
+        7: [
+            '#b2182b',
+            '#ef8a62',
+            '#fddbc7',
+            '#f7f7f7',
+            '#d1e5f0',
+            '#67a9cf',
+            '#2166ac',
+        ],
+        8: [
+            '#b2182b',
+            '#d6604d',
+            '#f4a582',
+            '#fddbc7',
+            '#d1e5f0',
+            '#92c5de',
+            '#4393c3',
+            '#2166ac',
+        ],
+        9: [
+            '#b2182b',
+            '#d6604d',
+            '#f4a582',
+            '#fddbc7',
+            '#f7f7f7',
+            '#d1e5f0',
+            '#92c5de',
+            '#4393c3',
+            '#2166ac',
+        ],
+        10: [
+            '#67001f',
+            '#b2182b',
+            '#d6604d',
+            '#f4a582',
+            '#fddbc7',
+            '#d1e5f0',
+            '#92c5de',
+            '#4393c3',
+            '#2166ac',
+            '#053061',
+        ],
+        11: [
+            '#67001f',
+            '#b2182b',
+            '#d6604d',
+            '#f4a582',
+            '#fddbc7',
+            '#f7f7f7',
+            '#d1e5f0',
+            '#92c5de',
+            '#4393c3',
+            '#2166ac',
+            '#053061',
+        ],
+    },
+}
 
+function drawGraph(data) {
     data.monthlyVariance.forEach(val => {
         val.month -= 1
     })
 
+    const fontSize = 16
+    const w = 5 * Math.ceil(data.monthlyVariance.length / 12) //1500;
+    const h = 33 * 12 //400;
+    const padding = {
+        left: 9 * fontSize,
+        right: 9 * fontSize,
+        top: 1 * fontSize,
+        bottom: 8 * fontSize,
+    }
+
+    const heading = d3.select('.chart-container').append('heading')
+    heading
+        .append('h1')
+        .attr('id', 'title')
+        .text('Monthly Global Land-Surface Temperature')
+    heading
+        .append('h2')
+        .attr('id', 'description')
+        .html(
+            data.monthlyVariance[0].year +
+                ' - ' +
+                data.monthlyVariance[data.monthlyVariance.length - 1].year +
+                ': base temperature ' +
+                data.baseTemperature +
+                '&#8451;'
+        )
+
     const svg = d3
         .select('.chart-container')
         .append('svg')
-        .attr('width', w + 100) // + 100
-        .attr('height', h + 60) // + 60
+        .attr('width', w + padding.left + padding.right) // + 100
+        .attr('height', h + padding.top + padding.bottom) // + 60
+
+    const legendColors = colorbrewer.RdYlBu[11].reverse()
+    const legendWidth = 400
+    const legendHeight = 300 / legendColors.length
+
+    const variance = data.monthlyVariance.map(function(val) {
+        return val.variance
+    })
+    const minTemp = data.baseTemperature + Math.min.apply(null, variance)
+    const maxTemp = data.baseTemperature + Math.max.apply(null, variance)
+
+    const legendThreshold = d3
+        .scaleThreshold()
+        .domain(
+            (function(min, max, count) {
+                const array = []
+                const step = (max - min) / count
+                const base = min
+                for (let i = 1; i < count; i++) {
+                    array.push(base + i * step)
+                }
+                return array
+            })(minTemp, maxTemp, legendColors.length)
+        )
+        .range(legendColors)
+
+    const legendX = d3
+        .scaleLinear()
+        .domain([minTemp, maxTemp])
+        .range([0, legendWidth])
+
+    const legendXAxis = d3
+        .axisBottom(legendX)
+        .tickSize(10, 0)
+        .tickValues(legendThreshold.domain())
+        .tickFormat(d3.format('.1f'))
+
+    const legend = svg
+        .append('g')
+        .attr('class', 'legend')
+        .attr('id', 'legend')
+        .attr(
+            'transform',
+            (d, i) => 'translate(0,' + (h - 2 * legendHeight) + ')'
+        )
+
+    legend
+        .append('g')
+        .selectAll('rect')
+        .data(
+            legendThreshold.range().map(function(color) {
+                const d = legendThreshold.invertExtent(color)
+                if (d[0] == null) d[0] = legendX.domain()[0]
+                if (d[1] == null) d[1] = legendX.domain()[1]
+                return d
+            })
+        )
+        .enter()
+        .append('rect')
+        .style('fill', function(d, i) {
+            return legendThreshold(d[0])
+        })
+        .attr({
+            x: function(d, i) {
+                return legendX(d[0])
+            },
+            y: 0,
+            width: function(d, i) {
+                return legendX(d[1]) - legendX(d[0])
+            },
+            height: legendHeight,
+        })
+
+    legend
+        .append('g')
+        .attr('transform', 'translate(' + 0 + ',' + legendHeight + ')')
+        .call(legendXAxis)
 
     // X-Axis label
     svg.append('text')
         .attr('x', w / 2 + 70)
         .attr('y', h + 50)
-        .text('Months')
+        .text('Years')
 
     // Y-Axis label
     svg.append('text')
         .attr('transform', 'rotate(-90)')
         .attr('x', -200)
         .attr('y', 80)
-        .text('Years')
+        .text('Months')
 
-    // TODO: User Story #2: My heat map should have a description with a corresponding id="description".
-    svg.selectAll('rect')
-        .data(data)
+    // X-Axis
+    const xScale = d3
+        .scaleBand()
+        .domain(data.monthlyVariance.map(val => val.year))
+        .rangeRound([0, w])
+    const xAxis = d3
+        .axisBottom(xScale)
+        .tickValues(xScale.domain().filter(year => year % 10 === 0))
+        .tickFormat(year => {
+            const date = new Date(0)
+            date.setUTCFullYear(year)
+            return d3.timeFormat('%Y')(date)
+        })
+        .tickSize(10, 1)
+
+    svg.append('g')
+        .call(xAxis)
+        .attr('id', 'x-axis')
+        .attr('transform', `translate(0, ${h})`)
+        .append('text')
+        .style('text-anchor', 'middle')
+
+    // Y-Axis
+    const yScale = d3
+        .scaleBand()
+        .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+        .rangeRound([0, h])
+    const yAxis = d3
+        .axisLeft(yScale)
+        .tickValues(yScale.domain())
+        .tickFormat(month => {
+            const date = new Date(0)
+            date.setUTCMonth(month)
+            return d3.timeFormat('%B')(date)
+        })
+        .tickSize(10, 1)
+
+    svg.append('g')
+        .call(yAxis)
+        .attr('id', 'y-axis')
+        .attr('transform', `translate(0,0)`)
+        .append('text')
+        .style('text-anchor', 'middle')
+
+    // Map
+    svg.append('g')
+        .classed('map', true)
+        .selectAll('rect')
+        .data(data.monthlyVariance)
         .enter()
         .append('rect')
-        // TODO: User Story #3: My heat map should have an x-axis with a corresponding id="x-axis".
+        .attr('class', 'cell')
+        .attr('data-temp', d => data.baseTemperature + d.variance)
+        .attr('data-month', d => d.month)
+        .attr('data-year', d => d.year)
+        .attr('x', d => xScale(d.year))
+        .attr('width', d => xScale.bandwidth())
+        .attr('y', d => yScale(d.month))
+        .attr('height', d => yScale.bandwidth())
+        .attr('fill', d => legendThreshold(data.baseTemperature + d.variance))
 
-    // TODO: User Story #4: My heat map should have a y-axis with a corresponding id="y-axis".
-
-    // TODO: User Story #5: My heat map should have rect elements with a class="cell" that represent the data.
-
-    // TODO: User Story #6: There should be at least 4 different fill colors used for the cells.
-
-    // TODO: User Story #7: Each cell will have the properties data-month, data-year, data-temp containing their corresponding month, year, and temperature values.
-
-    // TODO: User Story #8: The data-month, data-year of each cell should be within the range of the data.
-
-    // TODO: User Story #9: My heat map should have cells that align with the corresponding month on the y-axis.
-
-    // TODO: User Story #10: My heat map should have cells that align with the corresponding year on the x-axis.
-
-    // TODO: User Story #11: My heat map should have multiple tick labels on the y-axis with the full month name.
-
-    // TODO: User Story #12: My heat map should have multiple tick labels on the x-axis with the years between 1754 and 2015.
-
-    // TODO: User Story #16: I can mouse over an area and see a tooltip with a corresponding id="tooltip" which displays more information about the area.
-
-        // TODO: User Story #17: My tooltip should have a data-year property that corresponds to the data-year of the active area.
         // Tooltips
-        .on(
-            'mouseover',
-            (d, i) =>
-                tooltip
-                    .style('visibility', 'visible')
-                    .attr('data-year', YEARS[i])
-            //         .text(`Additional information:
-            // ${Object.values(d)}`)
+        .on('mouseover', (d, i) =>
+            tooltip
+                .style('visibility', 'visible')
+                .attr('data-year', d.year)
+                .text(`Month ${d.year} - ${d.month}`)
         )
         .on('mousemove', () => {
             tooltip
@@ -86,23 +342,4 @@ function drawGraph(data) {
                 .style('left', `${d3.event.pageX + 10}px`)
         })
         .on('mouseout', () => tooltip.style('visibility', 'hidden'))
-
-    // TODO: User Story #13: My heat map should have a legend with a corresponding id="legend".
-    // const legend = svg
-    //     .selectAll('.legend')
-    //     .data(color.domain())
-    //     .enter()
-    //     .append('g')
-    //     .attr('class', 'legend')
-    //     .attr('id', 'legend')
-    //     .attr('transform', (d, i) => 'translate(0,' + (h / 2 - i * 20) + ')')
-    // TODO: User Story #14: My legend should contain rect elements.
-    // legend
-    //     .append('rect')
-    //     .attr('x', w - 18)
-    //     .attr('width', 18)
-    //     .attr('height', 18)
-    //     .style('fill', color)
-
-    // TODO: User Story #15: The rect elements in the legend should use at least 4 different fill colors.
 }
