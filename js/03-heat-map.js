@@ -325,6 +325,7 @@ function drawGraph(data) {
         .attr('data-year', d => d.year)
         .attr('x', d => xScale(d.year))
         .attr('width', d => xScale.bandwidth())
+        // TODO:9. My heat map should have cells that align with the corresponding month on the y-axis.
         .attr('y', d => yScale(d.month))
         .attr('height', d => yScale.bandwidth())
         .attr('fill', d => legendThreshold(data.baseTemperature + d.variance))

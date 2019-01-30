@@ -15,8 +15,6 @@
     <title>FCC - Data Visualization Projects</title>
 
     <link rel="stylesheet" href="css/styles.css">
-
-    <script src="https://d3js.org/d3.v5.min.js"></script>
 </head>
 
 <body>
@@ -37,14 +35,26 @@
         </nav>
 
         <main>
-            <h1 id='title'>United States Educational Attainment</h1>
-            <h2>Percentage of adults age 25 and older with a bachelor's degree or higher (2010-2014)</h2>
             <div class='chart-container'></div>
+
+            <div id='main'>
+                <h1 id='title'>United States Educational Attainment</h1>
+                <div id='description'>Percentage of adults age 25 and older with a bachelor's degree or higher
+                    (2010-2014)</div>
+                <svg width="960" height="600"></svg>
+                <div id='source'>Source: <a href='https://www.ers.usda.gov/data-products/county-level-data-sets/download-data.aspx'>USDA
+                        Economic Research Service</a></div>
+            </div>
         </main>
     </div>
 
+    <!-- <script src="https://d3js.org/d3.v5.min.js"></script> -->
+    <!-- <script src="https://d3js.org/d3-queue.v3.min.js"></script> -->
+    <script src='https://d3js.org/d3.v4.min.js'></script>
+    <script src='https://d3js.org/topojson.v2.min.js'></script>
+    <script src='https://d3js.org/d3-scale-chromatic.v1.min.js'></script>
     <script src='js/04-choropleth-map.js'></script>
-    <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js" async defer></script>
+    <!-- <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js" async defer></script> -->
 </body>
 
 </html>
